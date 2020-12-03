@@ -17,7 +17,7 @@ const getAppConfig = async ({
   appId,
 }: {
   client: KintoneRestAPIClient;
-  appId: number;
+  appId: string;
 }): Promise<AppConfig> => {
   const { name, description } = await client.app.getAppSettings({ app: appId });
   const { properties } = await client.app.getFormFields({ app: appId });

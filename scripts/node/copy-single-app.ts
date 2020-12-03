@@ -14,7 +14,7 @@ const processEnv = (name: string): string => {
 };
 
 export const run = () => {
-  const fromAppId = processEnv("FROM_APP_ID");
+  const fromAppId = process.argv[2];
   const fromBaseUrl = processEnv("FROM_BASE_URL");
   const toBaseUrl = processEnv("TO_BASE_URL");
   const fromUsername = processEnv("FROM_USERNAME");
@@ -24,7 +24,7 @@ export const run = () => {
 
   copySingleApp({
     from: {
-      appId: Number(fromAppId),
+      appId: fromAppId,
       client: new KintoneRestAPIClient({
         baseUrl: fromBaseUrl,
         auth: { username: fromUsername, password: fromPassword },

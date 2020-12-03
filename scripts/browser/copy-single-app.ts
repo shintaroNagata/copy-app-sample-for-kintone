@@ -13,7 +13,7 @@ kintone.events.on("app.record.index.show", (event: unknown) => {
       await copySingleApp({
         from: {
           client,
-          appId: Number(kintone.app.getId()),
+          appId: kintone.app.getId(),
         },
         to: { client },
       });

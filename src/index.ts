@@ -6,7 +6,7 @@ const copySingleApp = async ({
   from,
   to,
 }: {
-  from: { client: KintoneRestAPIClient; appId: number };
+  from: { client: KintoneRestAPIClient; appId: string };
   to: { client: KintoneRestAPIClient };
 }) => {
   const fromAppConfig = await getAppConfig({
