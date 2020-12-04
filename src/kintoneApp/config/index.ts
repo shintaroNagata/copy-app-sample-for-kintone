@@ -29,14 +29,49 @@ const getAppConfig = async ({
   return { name, description, properties, layout };
 };
 
-const getAllRelatedAppsConfig = async (params: {
+const retrieveAllRelatedAppsConfig = async (params: {
   client: KintoneRestAPIClient;
   appId: string;
 }) => {
-  return getAllRelatedAppsConfigRecursive(params, []);
+  return retrieveAllRelatedAppsConfigRecursive(params, []);
 };
 
-const getAllRelatedAppsConfigRecursive = async (
+const retrieveAllRelatedAppsConfigFromProperties = (
+  params: {
+    client: KintoneRestAPIClient;
+    properties: Properties;
+  },
+  appsConfig: Array<{ appId: string; appConfig: AppConfig }>
+): Promise<Array<{ appId: string; appConfig: AppConfig }>> => {
+  return Object.keys(params.properties).reduce(
+    async (
+      acc: Promise<Array<{ appId: string; appConfig: AppConfig }>>,
+      fieldCode: string
+    ) => {
+      const fieldProperty = params.properties[fieldCode];
+      if (isLookupFieldProperty(fieldProperty)) {
+        const relatedAppId = fieldProperty.lookup.relatedApp.app;
+        return retrieveAllRelatedAppsConfigRecursive(
+          {
+            client: params.client,
+            appId: relatedAppId,
+          },
+          await acc
+        );
+      }
+      if (fieldProperty.type === "SUBTABLE") {
+        return retrieveAllRelatedAppsConfigFromProperties(
+          { client: params.client, properties: fieldProperty.fields },
+          await acc
+        );
+      }
+      return acc;
+    },
+    Promise.resolve(appsConfig)
+  );
+};
+
+const retrieveAllRelatedAppsConfigRecursive = async (
   params: {
     client: KintoneRestAPIClient;
     appId: string;
@@ -53,43 +88,17 @@ const getAllRelatedAppsConfigRecursive = async (
 
   const config = await getAppConfig(params);
 
-  const search = (
-    current: Promise<Array<{ appId: string; appConfig: AppConfig }>>,
-    properties: Properties
-  ): Promise<Array<{ appId: string; appConfig: AppConfig }>> => {
-    return Object.keys(properties).reduce(
-      async (
-        acc: Promise<Array<{ appId: string; appConfig: AppConfig }>>,
-        fieldCode: string
-      ) => {
-        const fieldProperty = properties[fieldCode];
-        if (isLookupFieldProperty(fieldProperty)) {
-          const relatedAppId = fieldProperty.lookup.relatedApp.app;
-          return getAllRelatedAppsConfigRecursive(
-            {
-              client: params.client,
-              appId: relatedAppId,
-            },
-            await acc
-          );
-        }
-        if (fieldProperty.type === "SUBTABLE") {
-          return search(acc, fieldProperty.fields);
-        }
-        return acc;
-      },
-      Promise.resolve(current)
-    );
-  };
-
-  const children = await search(Promise.resolve(appConfigs), config.properties);
-  children.push({ appId: params.appId, appConfig: config });
-  return children;
+  const allRelatedAppsConfig = await retrieveAllRelatedAppsConfigFromProperties(
+    { client: params.client, properties: config.properties },
+    appConfigs
+  );
+  allRelatedAppsConfig.push({ appId: params.appId, appConfig: config });
+  return allRelatedAppsConfig;
 };
 
 export {
   AppConfig,
   getAppConfig,
-  getAllRelatedAppsConfig,
+  retrieveAllRelatedAppsConfig,
   buildPropertiesToInitialize,
 };

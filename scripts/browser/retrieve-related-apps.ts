@@ -1,5 +1,5 @@
 import { KintoneRestAPIClient } from "@kintone/rest-api-client";
-import { getAllRelatedApps } from "../../src";
+import { retrieveAllRelatedApps } from "../../src";
 
 kintone.events.on("app.record.index.show", (event: unknown) => {
   const headerElement: HTMLElement = kintone.app.getHeaderSpaceElement();
@@ -11,7 +11,7 @@ kintone.events.on("app.record.index.show", (event: unknown) => {
     async () => {
       button.innerText = "...";
       console.dir(
-        await getAllRelatedApps({
+        await retrieveAllRelatedApps({
           from: { client, appId: kintone.app.getId() },
         }),
         { depth: 5 }
