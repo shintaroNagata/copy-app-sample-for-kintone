@@ -4,6 +4,12 @@ type Properties<
   T extends KintoneFormFieldProperty.OneOf = KintoneFormFieldProperty.OneOf
 > = Record<string, T>;
 
+const isLookupFieldProperty = (
+  fieldProperty: KintoneFormFieldProperty.OneOf
+): fieldProperty is KintoneFormFieldProperty.Lookup => {
+  return "lookup" in fieldProperty;
+};
+
 type BuiltinFieldProperty =
   | KintoneFormFieldProperty.RecordNumber
   | KintoneFormFieldProperty.Modifier
@@ -115,4 +121,4 @@ const buildPropertiesToInitialize = ({
   return { propertiesForAdd, propertiesForUpdate };
 };
 
-export { Properties, buildPropertiesToInitialize };
+export { Properties, isLookupFieldProperty, buildPropertiesToInitialize };

@@ -2,7 +2,11 @@ import {
   KintoneFormLayout,
   KintoneRestAPIClient,
 } from "@kintone/rest-api-client";
-import { Properties, buildPropertiesToInitialize } from "./properties";
+import {
+  Properties,
+  buildPropertiesToInitialize,
+  isLookupFieldProperty,
+} from "./properties";
 
 type Layout = KintoneFormLayout.OneOf[];
 type AppConfig = {
@@ -25,4 +29,67 @@ const getAppConfig = async ({
   return { name, description, properties, layout };
 };
 
-export { AppConfig, getAppConfig, buildPropertiesToInitialize };
+const getAllRelatedAppsConfig = async (params: {
+  client: KintoneRestAPIClient;
+  appId: string;
+}) => {
+  return getAllRelatedAppsConfigRecursive(params, []);
+};
+
+const getAllRelatedAppsConfigRecursive = async (
+  params: {
+    client: KintoneRestAPIClient;
+    appId: string;
+  },
+  appConfigs: Array<{ appId: string; appConfig: AppConfig }>
+): Promise<Array<{ appId: string; appConfig: AppConfig }>> => {
+  if (
+    appConfigs.some(({ appId }) => {
+      return appId === params.appId;
+    })
+  ) {
+    return appConfigs;
+  }
+
+  const config = await getAppConfig(params);
+
+  const search = (
+    current: Promise<Array<{ appId: string; appConfig: AppConfig }>>,
+    properties: Properties
+  ): Promise<Array<{ appId: string; appConfig: AppConfig }>> => {
+    return Object.keys(properties).reduce(
+      async (
+        acc: Promise<Array<{ appId: string; appConfig: AppConfig }>>,
+        fieldCode: string
+      ) => {
+        const fieldProperty = properties[fieldCode];
+        if (isLookupFieldProperty(fieldProperty)) {
+          const relatedAppId = fieldProperty.lookup.relatedApp.app;
+          return getAllRelatedAppsConfigRecursive(
+            {
+              client: params.client,
+              appId: relatedAppId,
+            },
+            await acc
+          );
+        }
+        if (fieldProperty.type === "SUBTABLE") {
+          return search(acc, fieldProperty.fields);
+        }
+        return acc;
+      },
+      Promise.resolve(current)
+    );
+  };
+
+  const children = await search(Promise.resolve(appConfigs), config.properties);
+  children.push({ appId: params.appId, appConfig: config });
+  return children;
+};
+
+export {
+  AppConfig,
+  getAppConfig,
+  getAllRelatedAppsConfig,
+  buildPropertiesToInitialize,
+};
