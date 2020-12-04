@@ -8,7 +8,6 @@ const bundlePath = path.resolve(__dirname, "bundle");
 module.exports = {
   entry: {
     "copy-single-app": path.join(scriptsPath, "browser", "copy-single-app"),
-    "get-related-apps": path.join(scriptsPath, "browser", "get-related-apps"),
   },
   output: {
     path: bundlePath,

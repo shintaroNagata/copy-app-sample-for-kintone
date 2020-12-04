@@ -29,26 +29,26 @@ const getAppConfig = async ({
   return { name, description, properties, layout };
 };
 
-const retrieveAllRelatedAppsConfig = async (params: {
+const retrieveAllRelatedApps = async (params: {
   client: KintoneRestAPIClient;
   appId: string;
 }) => {
-  return retrieveAllRelatedAppsConfigRecursive(params, []);
+  return retrieveAllRelatedAppsRecursive(params, []);
 };
 
-const retrieveAllRelatedAppsConfigFromProperties = (
+const retrieveAllRelatedAppsFromProperties = (
   params: {
     client: KintoneRestAPIClient;
     properties: Properties;
   },
-  appsConfig: Array<{ appId: string; appConfig: AppConfig }>
+  apps: Array<{ appId: string; appConfig: AppConfig }>
 ): Promise<Array<{ appId: string; appConfig: AppConfig }>> => {
   return Object.keys(params.properties).reduce(
     async (acc, fieldCode: string) => {
       const fieldProperty = params.properties[fieldCode];
       if (isLookupFieldProperty(fieldProperty)) {
         const relatedAppId = fieldProperty.lookup.relatedApp.app;
-        return retrieveAllRelatedAppsConfigRecursive(
+        return retrieveAllRelatedAppsRecursive(
           {
             client: params.client,
             appId: relatedAppId,
@@ -57,45 +57,45 @@ const retrieveAllRelatedAppsConfigFromProperties = (
         );
       }
       if (fieldProperty.type === "SUBTABLE") {
-        return retrieveAllRelatedAppsConfigFromProperties(
+        return retrieveAllRelatedAppsFromProperties(
           { client: params.client, properties: fieldProperty.fields },
           await acc
         );
       }
       return acc;
     },
-    Promise.resolve(appsConfig)
+    Promise.resolve(apps)
   );
 };
 
-const retrieveAllRelatedAppsConfigRecursive = async (
+const retrieveAllRelatedAppsRecursive = async (
   params: {
     client: KintoneRestAPIClient;
     appId: string;
   },
-  appConfigs: Array<{ appId: string; appConfig: AppConfig }>
+  apps: Array<{ appId: string; appConfig: AppConfig }>
 ): Promise<Array<{ appId: string; appConfig: AppConfig }>> => {
   if (
-    appConfigs.some(({ appId }) => {
+    apps.some(({ appId }) => {
       return appId === params.appId;
     })
   ) {
-    return appConfigs;
+    return apps;
   }
 
   const config = await getAppConfig(params);
 
-  const allRelatedAppsConfig = await retrieveAllRelatedAppsConfigFromProperties(
+  const allRelatedApps = await retrieveAllRelatedAppsFromProperties(
     { client: params.client, properties: config.properties },
-    appConfigs
+    apps
   );
-  allRelatedAppsConfig.push({ appId: params.appId, appConfig: config });
-  return allRelatedAppsConfig;
+  allRelatedApps.push({ appId: params.appId, appConfig: config });
+  return allRelatedApps;
 };
 
 export {
   AppConfig,
   getAppConfig,
-  retrieveAllRelatedAppsConfig,
+  retrieveAllRelatedApps,
   buildPropertiesToInitialize,
 };
