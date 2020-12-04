@@ -44,10 +44,7 @@ const retrieveAllRelatedAppsConfigFromProperties = (
   appsConfig: Array<{ appId: string; appConfig: AppConfig }>
 ): Promise<Array<{ appId: string; appConfig: AppConfig }>> => {
   return Object.keys(params.properties).reduce(
-    async (
-      acc: Promise<Array<{ appId: string; appConfig: AppConfig }>>,
-      fieldCode: string
-    ) => {
+    async (acc, fieldCode: string) => {
       const fieldProperty = params.properties[fieldCode];
       if (isLookupFieldProperty(fieldProperty)) {
         const relatedAppId = fieldProperty.lookup.relatedApp.app;
