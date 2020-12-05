@@ -1,5 +1,5 @@
 import { KintoneRestAPIClient } from "@kintone/rest-api-client";
-import { copySingleApp } from "../../src";
+import { copyMultipleApps } from "../../src";
 
 const processEnv = (name: string): string => {
   const value = process.env[name];
@@ -18,7 +18,7 @@ export const run = () => {
   const toUsername = processEnv("TO_USERNAME");
   const toPassword = processEnv("TO_PASSWORD");
 
-  copySingleApp({
+  copyMultipleApps({
     from: {
       appId: fromAppId,
       client: new KintoneRestAPIClient({
