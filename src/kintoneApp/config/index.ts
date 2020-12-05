@@ -37,6 +37,31 @@ const retrieveAllRelatedApps = async (params: {
   return retrieveAllRelatedAppsRecursive(params, []);
 };
 
+const retrieveAllRelatedAppsRecursive = async (
+  params: {
+    client: KintoneRestAPIClient;
+    appId: string;
+  },
+  apps: Array<{ appId: string; config: AppConfig }>
+): Promise<Array<{ appId: string; config: AppConfig }>> => {
+  if (
+    apps.some(({ appId }) => {
+      return appId === params.appId;
+    })
+  ) {
+    return apps;
+  }
+
+  const config = await getAppConfig(params);
+
+  const allRelatedApps = await retrieveAllRelatedAppsFromProperties(
+    { client: params.client, properties: config.properties },
+    apps
+  );
+  allRelatedApps.push({ appId: params.appId, config });
+  return allRelatedApps;
+};
+
 const retrieveAllRelatedAppsFromProperties = (
   params: {
     client: KintoneRestAPIClient;
@@ -67,31 +92,6 @@ const retrieveAllRelatedAppsFromProperties = (
     },
     Promise.resolve(apps)
   );
-};
-
-const retrieveAllRelatedAppsRecursive = async (
-  params: {
-    client: KintoneRestAPIClient;
-    appId: string;
-  },
-  apps: Array<{ appId: string; config: AppConfig }>
-): Promise<Array<{ appId: string; config: AppConfig }>> => {
-  if (
-    apps.some(({ appId }) => {
-      return appId === params.appId;
-    })
-  ) {
-    return apps;
-  }
-
-  const config = await getAppConfig(params);
-
-  const allRelatedApps = await retrieveAllRelatedAppsFromProperties(
-    { client: params.client, properties: config.properties },
-    apps
-  );
-  allRelatedApps.push({ appId: params.appId, config });
-  return allRelatedApps;
 };
 
 export {
