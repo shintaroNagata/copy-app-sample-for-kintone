@@ -1,6 +1,6 @@
 import { KintoneRestAPIClient } from "@kintone/rest-api-client";
-import { getAppConfig } from "./kintoneApp/config";
-import { releaseApp } from "./kintoneApp/management";
+import { getAppConfig, retrieveAllRelatedApps } from "./kintoneApp/config";
+import { releaseApp, releaseRelatedApps } from "./kintoneApp/management";
 
 const copySingleApp = async ({
   from,
@@ -16,4 +16,15 @@ const copySingleApp = async ({
   return releaseApp({ client: to.client, config: fromAppConfig });
 };
 
-export { copySingleApp };
+const copyMultipleApps = async ({
+  from,
+  to,
+}: {
+  from: { client: KintoneRestAPIClient; appId: string };
+  to: { client: KintoneRestAPIClient };
+}) => {
+  const apps = await retrieveAllRelatedApps(from);
+  return releaseRelatedApps({ ...to, apps });
+};
+
+export { copySingleApp, copyMultipleApps };

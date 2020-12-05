@@ -1,5 +1,6 @@
 import { KintoneRestAPIClient } from "@kintone/rest-api-client";
 import { AppConfig, buildPropertiesToInitialize } from "../config";
+import { isLookupFieldProperty } from "../config/properties";
 
 const deployAppAndWait = async ({
   client,
@@ -120,4 +121,57 @@ const releaseApp = async (params: {
   return appId;
 };
 
-export { releaseApp };
+const releaseRelatedApps = (params: {
+  client: KintoneRestAPIClient;
+  apps: Array<{ appId: string; config: AppConfig }>;
+}) => {
+  return releaseRelatedAppsRecursive(params, [], []);
+};
+
+const releaseRelatedAppsRecursive = async (
+  {
+    client,
+    apps,
+  }: {
+    client: KintoneRestAPIClient;
+    apps: Array<{ appId: string; config: AppConfig }>;
+  },
+  released: string[],
+  idMap: Array<{ from: string; to: string }>
+): Promise<string[]> => {
+  if (apps.length === 0) {
+    return released;
+  }
+  const app = apps[0];
+  const properties = app.config.properties;
+  const newProperties = Object.keys(properties).reduce<Record<string, any>>(
+    (acc, fieldCode) => {
+      const fieldProperty = properties[fieldCode];
+      if (isLookupFieldProperty(fieldProperty)) {
+        const relatedAppId = fieldProperty.lookup.relatedApp.app;
+        const to = idMap.find(({ from }) => from === relatedAppId)?.to;
+        if (to) {
+          acc[fieldCode] = {
+            ...fieldProperty,
+            lookup: { ...fieldProperty.lookup, relatedApp: { app: to } },
+          };
+        }
+        return acc;
+      }
+      acc[fieldCode] = fieldProperty;
+      return acc;
+    },
+    {}
+  );
+  const appId = await releaseApp({
+    client,
+    config: { ...app.config, properties: newProperties },
+  });
+  return releaseRelatedAppsRecursive(
+    { client, apps: apps.slice(1) },
+    [...released, appId],
+    [...idMap, { from: app.appId, to: appId }]
+  );
+};
+
+export { releaseApp, releaseRelatedApps };
