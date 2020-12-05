@@ -27,7 +27,9 @@ const deployAppAndWait = async ({
     });
     deployStatus = apps[0].status;
   }
-  return deployStatus;
+  if (deployStatus !== "SUCCESS") {
+    throw new Error(`Release does not succeed: ${deployStatus}`);
+  }
 };
 
 const initializeForm = async ({
@@ -110,12 +112,12 @@ const releaseApp = async (params: {
   config: AppConfig;
 }) => {
   const { appId, revision: createdRevision } = await createApp(params);
-  const status = await deployAppAndWait({
+  await deployAppAndWait({
     client: params.client,
     appId,
     revision: createdRevision,
   });
-  return { appId, status };
+  return appId;
 };
 
 export { releaseApp };
