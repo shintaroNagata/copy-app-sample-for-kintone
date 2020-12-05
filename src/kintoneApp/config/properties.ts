@@ -144,6 +144,16 @@ const modifyLookupReferences = ({
         }
         return acc;
       }
+      if (fieldProperty.type === "SUBTABLE") {
+        acc[fieldCode] = {
+          ...fieldProperty,
+          fields: modifyLookupReferences({
+            properties: fieldProperty.fields,
+            appIdMap,
+          }),
+        };
+        return acc;
+      }
       acc[fieldCode] = fieldProperty;
       return acc;
     },
