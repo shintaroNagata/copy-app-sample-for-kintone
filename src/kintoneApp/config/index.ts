@@ -41,8 +41,8 @@ const retrieveAllRelatedAppsFromProperties = (
     client: KintoneRestAPIClient;
     properties: Properties;
   },
-  apps: Array<{ appId: string; appConfig: AppConfig }>
-): Promise<Array<{ appId: string; appConfig: AppConfig }>> => {
+  apps: Array<{ appId: string; config: AppConfig }>
+): Promise<Array<{ appId: string; config: AppConfig }>> => {
   return Object.keys(params.properties).reduce(
     async (acc, fieldCode: string) => {
       const fieldProperty = params.properties[fieldCode];
@@ -73,8 +73,8 @@ const retrieveAllRelatedAppsRecursive = async (
     client: KintoneRestAPIClient;
     appId: string;
   },
-  apps: Array<{ appId: string; appConfig: AppConfig }>
-): Promise<Array<{ appId: string; appConfig: AppConfig }>> => {
+  apps: Array<{ appId: string; config: AppConfig }>
+): Promise<Array<{ appId: string; config: AppConfig }>> => {
   if (
     apps.some(({ appId }) => {
       return appId === params.appId;
@@ -89,7 +89,7 @@ const retrieveAllRelatedAppsRecursive = async (
     { client: params.client, properties: config.properties },
     apps
   );
-  allRelatedApps.push({ appId: params.appId, appConfig: config });
+  allRelatedApps.push({ appId: params.appId, config });
   return allRelatedApps;
 };
 
