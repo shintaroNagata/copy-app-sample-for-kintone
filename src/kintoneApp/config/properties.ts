@@ -121,4 +121,39 @@ const buildPropertiesToInitialize = ({
   return { propertiesForAdd, propertiesForUpdate };
 };
 
-export { Properties, isLookupFieldProperty, buildPropertiesToInitialize };
+const modifyLookupReferences = ({
+  properties,
+  appIdMap,
+}: {
+  properties: Properties;
+  appIdMap: Array<{ from: string; to: string }>;
+}) => {
+  // KintoneFormFieldProperty.LookupField requires `lookup.relatedApp.code`,
+  // but this can cause unexpected behavior. so, I use `any` keyword in there to avoid it.
+  return Object.keys(properties).reduce<Record<string, any>>(
+    (acc, fieldCode) => {
+      const fieldProperty = properties[fieldCode];
+      if (isLookupFieldProperty(fieldProperty)) {
+        const relatedAppId = fieldProperty.lookup.relatedApp.app;
+        const to = appIdMap.find(({ from }) => from === relatedAppId)?.to;
+        if (to) {
+          acc[fieldCode] = {
+            ...fieldProperty,
+            lookup: { ...fieldProperty.lookup, relatedApp: { app: to } },
+          };
+        }
+        return acc;
+      }
+      acc[fieldCode] = fieldProperty;
+      return acc;
+    },
+    {}
+  );
+};
+
+export {
+  Properties,
+  isLookupFieldProperty,
+  buildPropertiesToInitialize,
+  modifyLookupReferences,
+};

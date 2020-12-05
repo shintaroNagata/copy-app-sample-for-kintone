@@ -6,6 +6,7 @@ import {
   Properties,
   buildPropertiesToInitialize,
   isLookupFieldProperty,
+  modifyLookupReferences,
 } from "./properties";
 
 type Layout = KintoneFormLayout.OneOf[];
@@ -98,4 +99,5 @@ export {
   getAppConfig,
   retrieveAllRelatedApps,
   buildPropertiesToInitialize,
+  modifyLookupReferences,
 };
