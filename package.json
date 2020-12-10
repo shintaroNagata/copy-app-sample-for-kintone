@@ -1,7 +1,7 @@
 {
-  "name": "sample-scripts-for-kintone",
+  "name": "copy-app-sample-for-kintone",
   "version": "0.0.1",
-  "main": "index.js",
+  "private": true,
   "author": "shintaroNagata <cybozu.nagata@gmail.com>",
   "license": "MIT",
   "scripts": {
